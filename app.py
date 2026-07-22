@@ -258,13 +258,18 @@ if st.button("📥 Générer le fichier Excel", type="primary"):
         d1 = row.get("Fin")
         if not jour or not mod:
             continue
-        if isinstance(d0, pd.Timestamp):
+        if pd.isna(d0):
+            d0 = None
+        elif isinstance(d0, pd.Timestamp):
             d0 = d0.date()
-        if isinstance(d1, pd.Timestamp):
+        if pd.isna(d1):
+            d1 = None
+        elif isinstance(d1, pd.Timestamp):
             d1 = d1.date()
         directives.append({
             "jour": jour, "modalite": mod, "module": module or None,
-            "debut": d0 or start_date, "fin": d1 or end_date,
+            "debut": d0 if d0 is not None else start_date,
+            "fin": d1 if d1 is not None else end_date,
         })
 
     wb = generate_workbook(
@@ -291,5 +296,7 @@ if st.button("📥 Générer le fichier Excel", type="primary"):
         "⬇️ Télécharger le fichier Excel",
         data=buffer,
         file_name=filename,
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
