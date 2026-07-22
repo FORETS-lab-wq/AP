@@ -204,7 +204,7 @@ def modality_fill(modality_or_label, is_holiday=False):
 # Génération d'une feuille "année scolaire" (grand format, formations longues)
 # ---------------------------------------------------------------------------
 def write_year_sheet(wb, sheet_name, year_start, learner_name, contract_type,
-                      training_type, day_map, holidays):
+                      training_type, day_map, holidays, comments=""):
     ws = wb.create_sheet(sheet_name)
     ws.sheet_view.showGridLines = False
 
@@ -338,6 +338,11 @@ def write_year_sheet(wb, sheet_name, year_start, learner_name, contract_type,
     ws[f"B{total_row+2}"] = "COMMENTAIRES :"
     ws[f"B{total_row+2}"].font = _day_font(bold=True)
     ws.merge_cells(f"B{total_row+3}:AK{total_row+5}")
+    if comments:
+        c_comment = ws[f"B{total_row+3}"]
+        c_comment.value = comments
+        c_comment.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
+        c_comment.font = _day_font()
 
     return ws
 
@@ -346,7 +351,7 @@ def write_year_sheet(wb, sheet_name, year_start, learner_name, contract_type,
 # Génération d'une feuille compacte (formations courtes)
 # ---------------------------------------------------------------------------
 def write_short_sheet(wb, sheet_name, learner_name, contract_type, training_type,
-                       start, end, day_map, holidays):
+                       start, end, day_map, holidays, comments=""):
     ws = wb.create_sheet(sheet_name)
     ws.sheet_view.showGridLines = False
 
@@ -410,6 +415,11 @@ def write_short_sheet(wb, sheet_name, learner_name, contract_type, training_type
     ws.cell(row=r_total, column=3, value="h")
 
     ws.cell(row=r_total + 2, column=1, value="COMMENTAIRES :").font = _day_font(bold=True)
+    if comments:
+        ws.merge_cells(start_row=r_total + 3, start_column=1, end_row=r_total + 6, end_column=3)
+        c_comment = ws.cell(row=r_total + 3, column=1, value=comments)
+        c_comment.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
+        c_comment.font = _day_font()
 
     return ws
 
@@ -498,17 +508,22 @@ def write_modules_sheet(wb, modules: list, learner_name, training_type, planned_
 # Fonction principale
 # ---------------------------------------------------------------------------
 def generate_workbook(learner_name, contract_type, training_type, mode,
-                       start, end, periods, modules, directives=None):
+                       start, end, periods=None, modules=None, directives=None, comments=""):
     """
     mode: "long" (calendrier annuel Sept->Août, une feuille par année scolaire)
           "short" (feuille compacte liste de dates)
-    periods: liste de dicts {"debut": date, "fin": date, "modalite": str}
-    modules: liste de dicts {"code": str, "intitule": str, "volume": float}
+    periods: liste de dicts {"debut": date, "fin": date, "modalite": str} (optionnel,
+             base de remplissage ; peut être vide si seules les directives sont utilisées)
+    modules: liste de dicts {"code": str, "intitule": str, "modalite": str,
+                              "heures_formation": float, "heures_stage": float}
     directives: liste de dicts {"jour": "Jeudi", "modalite": str, "module": str|None,
                                  "debut": date, "fin": date}
                 Directives récurrentes (ex: "CCP2 en FOAD tous les jeudis"),
                 prioritaires sur les périodes de base.
+    comments: texte libre reporté dans la zone COMMENTAIRES du fichier généré.
     """
+    periods = periods or []
+    modules = modules or []
     directives = directives or []
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
@@ -527,10 +542,10 @@ def generate_workbook(learner_name, contract_type, training_type, mode,
         for y in academic_years_covered(start, end):
             sheet_name = f"{y} - {y+1}"
             write_year_sheet(wb, sheet_name, y, learner_name, contract_type,
-                              training_type, day_map, holidays)
+                              training_type, day_map, holidays, comments=comments)
     else:
         write_short_sheet(wb, "Planning", learner_name, contract_type, training_type,
-                           start, end, day_map, holidays)
+                           start, end, day_map, holidays, comments=comments)
 
     write_modules_sheet(wb, modules, learner_name, training_type, planned_hours)
 
