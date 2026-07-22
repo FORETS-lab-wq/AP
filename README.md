@@ -47,27 +47,29 @@ streamlit run app.py
 3. **Directives récurrentes** : pour les règles qui se répètent chaque
    semaine (ex. « CCP2 en distanciel tous les jeudis »). Une directive
    = un jour de semaine + une modalité +, en option, un module lié (parmi
-   les codes saisis à l'étape 2) + une plage de dates. Les directives
-   **priment** sur la répartition par périodes de l'étape 4 (mais jamais sur
-   les jours fériés). Quand un module est renseigné, les heures
+   les codes saisis à l'étape 2) + une plage de dates. C'est désormais le
+   **seul mécanisme de remplissage** du calendrier (mais jamais prioritaire
+   sur les jours fériés). Quand un module est renseigné, les heures
    correspondantes sont automatiquement cumulées et affichées dans l'onglet
    Modules du fichier généré, en regard du volume horaire prévu (avec un
    écart calculé).
-4. **Répartition du calendrier (base)** : tableau éditable de périodes
-   (Début / Fin / Modalité parmi Centre, FOAD, Entreprise, Examens). Chaque
-   période remplit automatiquement les jours ouvrés (lundi-vendredi) de la
-   modalité choisie ; les week-ends restent vides et les jours fériés
-   français (fixes et mobiles : Pâques, Ascension, Pentecôte…) sont calculés
-   et affichés automatiquement, quelle que soit l'année.
-   - Les périodes peuvent se chevaucher ou laisser des trous : les jours non
-     couverts restent vides, modifiables ensuite directement dans Excel.
-   - Les directives de l'étape 3 s'appliquent par-dessus ces périodes.
+4. **Remarques et structuration** : un espace de texte libre pour noter la
+   structuration générale du planning (grandes périodes, alternance, points
+   de vigilance...). Ce texte est repris tel quel dans la zone
+   « COMMENTAIRES » du fichier Excel généré. Un panneau optionnel permet
+   d'importer un planning Excel déjà réalisé pour le consulter à l'écran
+   pendant la saisie (uniquement à titre de repère — il n'est pas utilisé
+   dans le fichier généré).
 5. **Génération** : un clic produit le fichier Excel (.xlsx) téléchargeable,
    avec le récapitulatif d'heures (Centre/FOAD/Examens/Entreprise + TOTAL)
    calculé par formules, comme dans le modèle d'origine.
 
 ## Points à garder en tête
 
+- Le remplissage des jours du calendrier repose uniquement sur les
+  **directives récurrentes** (étape 3, ex. « CCP2 en FOAD tous les
+  jeudis »). Les jours non couverts par une directive restent vides et se
+  complètent ensuite directement dans Excel si besoin.
 - Les cases du calendrier restent en **Centre / FOAD / Entreprise / Examens**
   (comme votre modèle actuel) ; le lien avec les modules se fait uniquement
   via l'onglet Modules et son total d'heures, pas case par case.
