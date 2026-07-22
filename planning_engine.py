@@ -124,8 +124,12 @@ def apply_directives(day_map: dict, directives: list, start: date, end: date):
         if not jour or not mod or jour not in JOURS_SEMAINE:
             continue
         weekday_idx = JOURS_SEMAINE.index(jour)
-        d0 = max(d.get("debut") or start, start)
-        d1 = min(d.get("fin") or end, end)
+        raw_debut = d.get("debut")
+        raw_fin = d.get("fin")
+        d0 = raw_debut if isinstance(raw_debut, date) else start
+        d1 = raw_fin if isinstance(raw_fin, date) else end
+        d0 = max(d0, start)
+        d1 = min(d1, end)
         if d0 > d1:
             continue
         # se positionner sur la première occurrence du jour de semaine visé
