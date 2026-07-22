@@ -189,30 +189,42 @@ directives_df = st.data_editor(
 st.divider()
 
 # ---------------------------------------------------------------------------
-# 4. Répartition du calendrier (périodes de modalité)
+# 4. Remarques et structuration libre
 # ---------------------------------------------------------------------------
-st.header("4. Répartition du calendrier (base)")
+st.header("4. Remarques et structuration")
 st.caption(
-    "Indiquez les périodes et la modalité associée (Centre / FOAD / Entreprise / Examens). "
-    "Les jours fériés français sont ajoutés automatiquement. Les jours non couverts par une "
-    "période restent vides et les week-ends ne sont jamais remplis. Les directives "
-    "récurrentes ci-dessus s'appliquent par-dessus ces périodes."
+    "Espace libre pour noter la structuration générale du planning (grandes périodes, "
+    "alternance, points de vigilance...). Ce texte est repris tel quel dans la zone "
+    "« COMMENTAIRES » du fichier Excel généré. Le remplissage précis des jours reste "
+    "piloté par les directives récurrentes de l'étape 3."
 )
 
-default_periods = pd.DataFrame(
-    [{"Début": start_date, "Fin": end_date, "Modalité": "Centre"}]
+comments = st.text_area(
+    "Notes / structuration libre",
+    height=140,
+    placeholder=(
+        "Ex : Septembre-décembre en Centre, alternance FOAD/Entreprise à partir de janvier, "
+        "période d'examens prévue en mai, semaine banalisée pour le CCP2 fin juin..."
+    ),
 )
-periods_df = st.data_editor(
-    default_periods,
-    num_rows="dynamic",
-    use_container_width=True,
-    column_config={
-        "Début": st.column_config.DateColumn(format="DD/MM/YYYY"),
-        "Fin": st.column_config.DateColumn(format="DD/MM/YYYY"),
-        "Modalité": st.column_config.SelectboxColumn(options=MODALITES),
-    },
-    key="periods_editor",
-)
+
+with st.expander("💡 S'inspirer d'un planning existant (optionnel)"):
+    st.caption(
+        "Importez un fichier Excel de planning déjà réalisé pour le consulter pendant votre "
+        "saisie — il ne sera pas utilisé dans le fichier généré, c'est uniquement pour vous "
+        "en inspirer."
+    )
+    reference_file = st.file_uploader(
+        "Planning existant (.xlsx)", type=["xlsx"], key="reference_upload"
+    )
+    if reference_file is not None:
+        try:
+            xls = pd.ExcelFile(reference_file)
+            sheet_choice = st.selectbox("Feuille à consulter", xls.sheet_names, key="reference_sheet")
+            preview_df = pd.read_excel(reference_file, sheet_name=sheet_choice, header=None, nrows=45)
+            st.dataframe(preview_df, use_container_width=True, height=420)
+        except Exception as e:
+            st.warning(f"Impossible de lire ce fichier : {e}")
 
 st.divider()
 
@@ -222,17 +234,6 @@ st.divider()
 st.header("5. Générer le planning")
 
 if st.button("📥 Générer le fichier Excel", type="primary"):
-    periods = []
-    for _, row in periods_df.iterrows():
-        d0, d1, mod = row.get("Début"), row.get("Fin"), row.get("Modalité")
-        if pd.isna(d0) or pd.isna(d1) or not mod:
-            continue
-        if isinstance(d0, pd.Timestamp):
-            d0 = d0.date()
-        if isinstance(d1, pd.Timestamp):
-            d1 = d1.date()
-        periods.append({"debut": d0, "fin": d1, "modalite": mod})
-
     modules = []
     for _, row in modules_df.iterrows():
         code = row.get("Code", "")
@@ -279,9 +280,10 @@ if st.button("📥 Générer le fichier Excel", type="primary"):
         mode=mode,
         start=start_date,
         end=end_date,
-        periods=periods,
+        periods=[],
         modules=modules,
         directives=directives,
+        comments=comments,
     )
 
     buffer = io.BytesIO()
@@ -296,7 +298,5 @@ if st.button("📥 Générer le fichier Excel", type="primary"):
         "⬇️ Télécharger le fichier Excel",
         data=buffer,
         file_name=filename,
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
